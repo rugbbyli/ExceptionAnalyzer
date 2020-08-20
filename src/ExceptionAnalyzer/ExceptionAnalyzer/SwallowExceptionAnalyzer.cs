@@ -11,7 +11,7 @@ namespace ExceptionAnalyzer
     /// Analyzes control flow for the catch block and warns for every exit-point that swallow an exception.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class SwallowExceptionAnalyzer : DiagnosticAnalyzer
+    public sealed class SwallowExceptionAnalyzer : AnalyzerBase
     {
         public const string DiagnosticId = "EA003";
         internal const string Title = "Catch block swallows an exception";
@@ -22,13 +22,9 @@ namespace ExceptionAnalyzer
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
-        public override void Initialize(AnalysisContext context)
-        {
-            context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.CatchClause);
-        }
+        protected override SyntaxKind TargetSyntaxKind => SyntaxKind.CatchClause;
 
-        // Called when Roslyn encounters a catch clause.
-        private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        protected override void Analyze(SyntaxNodeAnalysisContext context)
         {
             var catchBlock = context.Node as CatchClauseSyntax;
             // Ignoring non-catch blocks and catch blocks without exception declarations

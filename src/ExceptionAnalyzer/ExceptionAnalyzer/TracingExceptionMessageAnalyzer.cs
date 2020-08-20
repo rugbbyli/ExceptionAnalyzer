@@ -14,7 +14,7 @@ namespace ExceptionAnalyzer
     /// Checks that `catch` block uses `ex.Message`.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class TracingExceptionMessageAnalyzer : DiagnosticAnalyzer
+    public sealed class TracingExceptionMessageAnalyzer : AnalyzerBase
     {
         public const string DiagnosticId = "EA005";
 
@@ -28,16 +28,9 @@ namespace ExceptionAnalyzer
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics  => ImmutableArray.Create(Rule);
 
-        public override void Initialize(AnalysisContext context)
-        {
-            // I don't know why yet, but selecting SytaxKind.CatchClause lead to very strange behavior:
-            // AnalyzeSyntax method would called for a few times and the same warning would be added to diagnostic list!
-            // Using IdentifierName syntax instead.
-            context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.IdentifierName);
-        }
+        protected override SyntaxKind TargetSyntaxKind => SyntaxKind.IdentifierName;
 
-        // Called when Roslyn encounters a catch clause.
-        private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        protected override void Analyze(SyntaxNodeAnalysisContext context)
         {
             // Casting Node object
             var identifier = context.Node as SimpleNameSyntax;
@@ -121,7 +114,7 @@ namespace ExceptionAnalyzer
             }
 
             var exception = context.SemanticModel.Compilation.GetTypeByMetadataName(typeof(Exception).FullName);
-            return symbol.Symbol == exception;
+            return Equals(symbol.Symbol, exception);
         }
     }
 }

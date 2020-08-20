@@ -9,7 +9,7 @@ using System.Linq;
 namespace ExceptionAnalyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class ThrowExAnalyzer : DiagnosticAnalyzer
+    public sealed class ThrowExAnalyzer : AnalyzerBase
     {
         public const string DiagnosticId = "EA004";
         // TODO: extract all messages somewhere to be able to add errogant messages
@@ -21,13 +21,9 @@ namespace ExceptionAnalyzer
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
-        public override void Initialize(AnalysisContext context)
-        {
-            context.RegisterSyntaxNodeAction(AnalyzeCatchClause, SyntaxKind.CatchClause);
-        }
+        protected override SyntaxKind TargetSyntaxKind => SyntaxKind.CatchClause;
 
-        // Called when Roslyn encounters a catch clause.
-        private static void AnalyzeCatchClause(SyntaxNodeAnalysisContext context)
+        protected override void Analyze(SyntaxNodeAnalysisContext context)
         {
             var catchClause = context.Node as CatchClauseSyntax;
             if (catchClause == null || catchClause.Declaration == null)

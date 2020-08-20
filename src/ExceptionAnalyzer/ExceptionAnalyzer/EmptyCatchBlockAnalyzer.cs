@@ -14,7 +14,7 @@ namespace ExceptionAnalyzer
     /// TODO: right now, <see cref="EmptyCatchBlockAnalyzer"/> is a subset of <see cref="GenericCatchBlockAnalyzer"/>. Revisit this approach later!
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class EmptyCatchBlockAnalyzer : DiagnosticAnalyzer
+    public sealed class EmptyCatchBlockAnalyzer : AnalyzerBase
     {
         public const string DiagnosticId = "EA001";
 
@@ -28,13 +28,8 @@ namespace ExceptionAnalyzer
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
-        public override void Initialize(AnalysisContext context)
-        {
-            context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.CatchClause);
-        }
-
-        // Called when Roslyn encounters a catch clause.
-        private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        protected override SyntaxKind TargetSyntaxKind => SyntaxKind.CatchClause;
+        protected override void Analyze(SyntaxNodeAnalysisContext context)
         {
             // Type cast to what we know.
             var catchBlock = context.Node as CatchClauseSyntax;
@@ -63,7 +58,7 @@ namespace ExceptionAnalyzer
             }
 
             var exception = context.SemanticModel.Compilation.GetTypeByMetadataName(typeof(Exception).FullName);
-            return symbol.Symbol == exception;
+            return Equals(symbol.Symbol, exception);
         }
     }
 }

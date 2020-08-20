@@ -10,7 +10,7 @@ namespace ExceptionAnalyzer
     /// Detects `catch` blocks that swallow an exception.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class GenericCatchBlockAnalyzer : DiagnosticAnalyzer
+    public sealed class GenericCatchBlockAnalyzer : AnalyzerBase
     {
         // Catch is not empty, `catch` or `catch(Exception)` and some return statement exists. Add hint!
         // show hint on the return itself
@@ -23,13 +23,9 @@ namespace ExceptionAnalyzer
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
-        public override void Initialize(AnalysisContext context)
-        {
-            context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.CatchClause);
-        }
+        protected override SyntaxKind TargetSyntaxKind => SyntaxKind.CatchClause;
 
-        // Called when Roslyn encounters a catch clause.
-        private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        protected override void Analyze(SyntaxNodeAnalysisContext context)
         {
             var catchBlock = context.Node as CatchClauseSyntax;
             
