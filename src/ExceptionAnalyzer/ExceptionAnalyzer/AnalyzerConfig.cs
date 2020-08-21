@@ -8,8 +8,10 @@ namespace ExceptionAnalyzer
     {
         public string Root { get; private set; }
         public HashSet<string> ExcludeFolders { get; private set; } = new HashSet<string>();
+        public HashSet<string> SuitableHandlers { get; } = new HashSet<string>();
         private const string optionRoot = "--root";
         private const string optionExclude = "--exclude";
+        private const string optionSuitableHandler = "--suitable";    //like Debug.LogException
 
         public AnalyzerConfig Init(AdditionalText configFile)
         {
@@ -23,6 +25,10 @@ namespace ExceptionAnalyzer
                 if (splits[0] == optionExclude)
                 {
                     ExcludeFolders.Add(Path.GetFullPath(Path.Combine(pathBase, splits[1])));
+                }
+                else if (splits[0] == optionSuitableHandler)
+                {
+                    SuitableHandlers.Add(splits[1]);
                 }
                 else if (splits[0] == optionRoot)
                 {
