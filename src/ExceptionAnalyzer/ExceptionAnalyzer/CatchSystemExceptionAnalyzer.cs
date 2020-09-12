@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -7,11 +8,12 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace ExceptionAnalyzer
 {
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class CatchSystemExceptionAnalyzer : AnalyzerBase
     {
         public const string DiagnosticId = "EA007";
         internal const string Title = "do not catch System.Exception";
-        internal const string MessageFormat = "Catch all exception type seems a bad idea.";
+        internal const string MessageFormat = "Catch System.Exception without suitable handler seems a bad idea.";
         internal const string Category = "CodeSmell";
 
         internal static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true);
@@ -24,16 +26,33 @@ namespace ExceptionAnalyzer
         {
             var catchBlock = context.Node as CatchClauseSyntax;
             
-            if (catchBlock == null || catchBlock.Declaration == null || (context.SemanticModel.GetTypeInfo(catchBlock.Declaration.Type).Type.ToDisplayString() != "System.Exception"))
+            if (catchBlock == null || catchBlock.Declaration == null || !CatchIsTooGeneric(context, catchBlock.Declaration))
             {
                 return;
             }
             
             StatementSyntax syntax = catchBlock.Block;
-            var source = syntax.GetText().ToString();
-            if (Config.SuitableHandlers.Any(source.Contains)) return;
-            
-            //todo
+            var suitable = syntax.DescendantNodes().OfType<MemberAccessExpressionSyntax>().Any(s =>
+            {
+                return Config.SuitableHandlers.Contains(s.ToString());
+            });
+
+            if (!suitable)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Rule, catchBlock.GetLocation()));
+            }
+        }
+        
+        private static bool CatchIsTooGeneric(SyntaxNodeAnalysisContext context, CatchDeclarationSyntax declaration)
+        {
+            var symbol = context.SemanticModel.GetSymbolInfo(declaration.Type);
+            if (symbol.Symbol == null)
+            {
+                return false;
+            }
+
+            var exception = context.SemanticModel.Compilation.GetTypeByMetadataName(typeof(Exception).FullName);
+            return Equals(symbol.Symbol, exception);
         }
     }
 }

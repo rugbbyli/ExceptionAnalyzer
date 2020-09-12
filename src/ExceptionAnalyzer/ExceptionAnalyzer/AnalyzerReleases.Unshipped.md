@@ -10,3 +10,5 @@ EA003 | CodeSmell | Warning | SwallowExceptionAnalyzer
 EA004 | CodeSmell | Warning | ThrowExAnalyzer
 EA005 | CodeSmell | Warning | TracingExceptionMessageAnalyzer
 EA006 | CodeSmell | Warning | ThrowNewExceptionAnalyzer
+EA007 | CodeSmell | Warning | CatchSystemExceptionAnalyzer
+EA008 | CodeSmell | Warning | CatchExceptionWithoutVariableAnalyzer
